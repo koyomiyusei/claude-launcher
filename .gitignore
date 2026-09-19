@@ -1,0 +1,9 @@
+# 署名鍵は絶対に公開しない
+debug.keystore
+*.jks
+*.keystore
+
+# ビルド生成物
+build/
+build.log
+*.idsig
