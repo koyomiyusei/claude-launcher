@@ -1,6 +1,6 @@
 {
-  "versionCode": 2,
-  "versionName": "1.1",
+  "versionCode": 3,
+  "versionName": "1.2",
   "apkUrl": "https://raw.githubusercontent.com/koyomiyusei/claude-launcher/main/ClaudeLauncher.apk",
-  "notes": "共有メニューからの追加 / クリップボードのURL検知 / 開き先アプリ（PWA）の指定 / アップデート確認"
+  "notes": "ボタン一つでアプリ内更新 / 開き方の一覧にPWAが出るよう修正 / 更新確認ボタンを下部へ移動"
 }

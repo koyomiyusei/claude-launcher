@@ -56,25 +56,11 @@ public class MainActivity extends Activity {
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(20), dp(24), dp(20), dp(16));
 
-        LinearLayout header = new LinearLayout(this);
-        header.setOrientation(LinearLayout.HORIZONTAL);
-        header.setGravity(Gravity.CENTER_VERTICAL);
-
         TextView title = new TextView(this);
         title.setText("Claudeランチャー");
         title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
         title.setTypeface(Typeface.DEFAULT_BOLD);
-        header.addView(title, new LinearLayout.LayoutParams(0,
-                ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-
-        Button update = new Button(this);
-        update.setText("更新確認");
-        update.setAllCaps(false);
-        update.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        update.setOnClickListener(v -> Updater.check(MainActivity.this, false));
-        header.addView(update);
-
-        root.addView(header);
+        root.addView(title);
 
         TextView sub = new TextView(this);
         sub.setText("よく使うチャットやプロジェクトをホーム画面に置く　v" + Updater.currentName(this));
@@ -97,11 +83,24 @@ public class MainActivity extends Activity {
                 ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f);
         root.addView(list, lp);
 
+        LinearLayout buttons = new LinearLayout(this);
+        buttons.setOrientation(LinearLayout.HORIZONTAL);
+
         Button add = new Button(this);
         add.setText("＋  追加");
         add.setAllCaps(false);
         add.setOnClickListener(v -> showEditor(null));
-        root.addView(add, new LinearLayout.LayoutParams(
+        buttons.addView(add, new LinearLayout.LayoutParams(0,
+                ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+        Button update = new Button(this);
+        update.setText("更新確認");
+        update.setAllCaps(false);
+        update.setOnClickListener(v -> Updater.check(MainActivity.this, false));
+        buttons.addView(update, new LinearLayout.LayoutParams(0,
+                ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+        root.addView(buttons, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
         TextView hint = new TextView(this);
