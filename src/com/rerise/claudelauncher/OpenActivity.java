@@ -30,6 +30,10 @@ public class OpenActivity extends Activity {
         } else if (browser) {
             String b = defaultBrowser();
             if (b != null) view.setPackage(b);
+        } else {
+            // 指定が無いときは claude.ai のPWAがあればそれを優先する
+            String pwa = Handlers.pwaPackage(this);
+            if (pwa != null) view.setPackage(pwa);
         }
 
         try {

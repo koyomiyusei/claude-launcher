@@ -80,7 +80,7 @@ rem NOTE: relative paths only. An absolute path would contain the Japanese
 rem user name, and javac reads @argfiles as UTF-8 while cmd writes cp932.
 rem If you add a new .java file, add it to SRC below.
 echo [3/7] javac>> "%LOG%"
-set "SRC=src\com\rerise\claudelauncher\Entry.java src\com\rerise\claudelauncher\Store.java src\com\rerise\claudelauncher\IconGen.java src\com\rerise\claudelauncher\Updater.java src\com\rerise\claudelauncher\OpenActivity.java src\com\rerise\claudelauncher\MainActivity.java"
+set "SRC=src\com\rerise\claudelauncher\Entry.java src\com\rerise\claudelauncher\Store.java src\com\rerise\claudelauncher\IconGen.java src\com\rerise\claudelauncher\Handlers.java src\com\rerise\claudelauncher\Updater.java src\com\rerise\claudelauncher\OpenActivity.java src\com\rerise\claudelauncher\MainActivity.java"
 if exist build\gen\com\rerise\claudelauncher\R.java set "SRC=!SRC! build\gen\com\rerise\claudelauncher\R.java"
 "%JH%\bin\javac.exe" -encoding UTF-8 -source 17 -target 17 -nowarn -Xlint:-options -classpath "%PLAT%" -d build\classes !SRC! >> "%LOG%" 2>&1
 if errorlevel 1 goto fail

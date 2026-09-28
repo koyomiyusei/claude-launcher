@@ -283,7 +283,9 @@ public class MainActivity extends Activity {
                 ? new Entry(Store.newId(),
                             presetName == null ? "" : presetName,
                             presetUrl == null ? "https://claude.ai/" : presetUrl,
-                            "", Store.PALETTE[entries.size() % Store.PALETTE.length], false)
+                            "", Store.PALETTE[entries.size() % Store.PALETTE.length], false,
+                            // 新しい項目は最初からPWAで開く（入っていなければ自動）
+                            Handlers.pwaPackage(this))
                 : existing;
         dialogOpen = true;
 
@@ -416,23 +418,14 @@ public class MainActivity extends Activity {
 
     /** claude.ai のURLを開けるアプリを列挙する（ブラウザ・Claudeアプリ・PWAのWebAPKなど） */
     private List<ResolveInfo> handlers() {
-        Intent probe = new Intent(Intent.ACTION_VIEW, Uri.parse("https://claude.ai/"));
-        probe.addCategory(Intent.CATEGORY_BROWSABLE);
-        List<ResolveInfo> all = getPackageManager().queryIntentActivities(probe, PackageManager.MATCH_ALL);
-        List<ResolveInfo> out = new ArrayList<ResolveInfo>();
-        List<String> seen = new ArrayList<String>();
-        for (ResolveInfo ri : all) {
-            if (ri.activityInfo == null) continue;
-            String p = ri.activityInfo.packageName;
-            if (p == null || p.equals(getPackageName()) || seen.contains(p)) continue;
-            seen.add(p);
-            out.add(ri);
-        }
-        return out;
+        return Handlers.forClaude(this);
     }
 
     private String handlerLabel(String pkg) {
-        if (pkg == null || pkg.isEmpty()) return "自動（Androidに任せる）";
+        if (pkg == null || pkg.isEmpty()) {
+            return Handlers.pwaPackage(this) != null
+                    ? "自動（PWAで開きます）" : "自動（Androidに任せる）";
+        }
         for (ResolveInfo ri : handlers()) {
             if (pkg.equals(ri.activityInfo.packageName)) return prettyName(ri);
         }
