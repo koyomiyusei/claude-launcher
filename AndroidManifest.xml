@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.rerise.claudelauncher"
-    android:versionCode="4"
-    android:versionName="1.3">
+    android:versionCode="5"
+    android:versionName="1.4">
 
     <uses-sdk android:minSdkVersion="29" android:targetSdkVersion="35" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- アプリ内から更新APKをインストールするため -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- お知らせ通知 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <queries>
         <!-- ブラウザ全般（https 全体を受け持つアプリ） -->
@@ -62,5 +65,10 @@
             android:excludeFromRecents="true"
             android:taskAffinity=""
             android:theme="@android:style/Theme.NoDisplay" />
+
+        <service
+            android:name=".NoticeJob"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
     </application>
 </manifest>

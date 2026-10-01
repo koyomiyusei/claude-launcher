@@ -10,7 +10,9 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ShortcutInfo;
 import android.content.pm.ShortcutManager;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.os.Build;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.Icon;
@@ -97,6 +99,10 @@ public class MainActivity extends Activity {
         update.setText("更新確認");
         update.setAllCaps(false);
         update.setOnClickListener(v -> Updater.check(MainActivity.this, false));
+        update.setOnLongClickListener(v -> {
+            showNoticeSettings();
+            return true;
+        });
         buttons.addView(update, new LinearLayout.LayoutParams(0,
                 ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
 
@@ -114,6 +120,8 @@ public class MainActivity extends Activity {
         setContentView(root);
         handleIncoming(getIntent());
         Updater.autoCheck(this);
+        askNotificationPermission();
+        NoticeJob.schedule(this);
     }
 
     @Override
@@ -206,16 +214,41 @@ public class MainActivity extends Activity {
     // ---------------- 操作メニュー ----------------
 
     private void showActions(final Entry e) {
-        String[] items = {"ホーム画面に追加", "開いてみる", "編集", "削除"};
+        String[] items = {"ホーム画面に追加", "開いてみる", "編集", "↑ 上へ", "↓ 下へ", "削除"};
         new AlertDialog.Builder(this)
                 .setTitle(e.name)
                 .setItems(items, (dialog, which) -> {
                     if (which == 0) pin(e);
                     else if (which == 1) open(e);
                     else if (which == 2) showEditor(e);
+                    else if (which == 3) move(e, -1);
+                    else if (which == 4) move(e, 1);
                     else confirmDelete(e);
                 })
                 .show();
+    }
+
+    /** 並び替え。dir が -1 で上、+1 で下 */
+    private void move(Entry e, int dir) {
+        int i = entries.indexOf(e);
+        int j = i + dir;
+        if (i < 0 || j < 0 || j >= entries.size()) return;
+        entries.set(i, entries.get(j));
+        entries.set(j, e);
+        Store.save(this, entries);
+        adapter.notifyDataSetChanged();
+    }
+
+    /** 名前から2文字取ってアイコン文字にする（絵文字1つならそれだけ） */
+    private String defaultIcon(String name) {
+        String t = name.trim();
+        if (t.isEmpty()) return "C";
+        int n = t.codePointCount(0, t.length());
+        int take = Math.min(n, 2);
+        int first = t.codePointAt(0);
+        if (Character.getType(first) == Character.SURROGATE
+                || Character.charCount(first) == 2) take = 1; // 絵文字は1つで十分
+        return t.substring(0, t.offsetByCodePoints(0, take));
     }
 
     private void open(Entry e) {
@@ -386,7 +419,7 @@ public class MainActivity extends Activity {
                     e.name = n;
                     e.url = u;
                     e.icon = icon.getText().toString().trim();
-                    if (e.icon.isEmpty()) e.icon = n.substring(0, 1);
+                    if (e.icon.isEmpty()) e.icon = defaultIcon(n);
                     e.color = chosen[0];
                     e.pkg = chosenPkg[0];
                     if (isNew) entries.add(e);
@@ -460,6 +493,53 @@ public class MainActivity extends Activity {
                     button.setText(labels[which]);
                 })
                 .show();
+    }
+
+    // ---------------- お知らせ通知 ----------------
+
+    private void askNotificationPermission() {
+        if (Build.VERSION.SDK_INT < 33) return;
+        if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+                == PackageManager.PERMISSION_GRANTED) return;
+        try {
+            requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 11);
+        } catch (Exception ignored) {
+        }
+    }
+
+    private void showNoticeSettings() {
+        final boolean on = Notices.enabled(this);
+        String[] items = {
+                on ? "お知らせ通知: オン（タップでオフ）" : "お知らせ通知: オフ（タップでオン）",
+                "今すぐお知らせを確認",
+                "更新を確認"
+        };
+        new AlertDialog.Builder(this)
+                .setTitle("設定")
+                .setItems(items, (d, which) -> {
+                    if (which == 0) {
+                        Notices.setEnabled(this, !on);
+                        if (!on) NoticeJob.schedule(this); else NoticeJob.cancel(this);
+                        toast(!on ? "お知らせ通知をオンにしました" : "オフにしました");
+                    } else if (which == 1) {
+                        checkNoticesNow();
+                    } else {
+                        Updater.check(MainActivity.this, false);
+                    }
+                })
+                .show();
+    }
+
+    private void checkNoticesNow() {
+        toast("確認しています…");
+        new Thread(() -> {
+            final int n = Notices.checkAndNotify(getApplicationContext());
+            runOnUiThread(() -> {
+                if (n < 0) toast("確認できませんでした");
+                else if (n == 0) toast("新しいお知らせはありません");
+                else toast(n + "件のお知らせ");
+            });
+        }).start();
     }
 
     // ---------------- 部品 ----------------

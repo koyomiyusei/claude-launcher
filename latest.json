@@ -1,6 +1,6 @@
 {
-  "versionCode": 4,
-  "versionName": "1.3",
+  "versionCode": 5,
+  "versionName": "1.4",
   "apkUrl": "https://raw.githubusercontent.com/koyomiyusei/claude-launcher/main/ClaudeLauncher.apk",
-  "notes": "ホーム画面に追加する項目を最初からPWAで開くように（未指定の既存項目もPWA優先）"
+  "notes": "アイコン文字を2文字に / 並び替え（上へ・下へ）/ Claudeからのお知らせ通知（15分おき確認）"
 }
