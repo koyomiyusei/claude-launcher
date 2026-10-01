@@ -2,4 +2,6 @@
 <resources>
     <string name="app_name">Claudeランチャー</string>
     <string name="share_label">Claudeランチャーに追加</string>
+    <string name="widget_name">Claudeランチャー 一覧</string>
+    <string name="widget_desc">登録したチャットを一覧で開く</string>
 </resources>

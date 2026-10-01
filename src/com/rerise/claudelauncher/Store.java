@@ -78,6 +78,7 @@ public class Store {
         } catch (Exception ignored) {
         }
         prefs(c).edit().putString(KEY, arr.toString()).apply();
+        LauncherWidget.refresh(c);
     }
 
     public static String newId() {
