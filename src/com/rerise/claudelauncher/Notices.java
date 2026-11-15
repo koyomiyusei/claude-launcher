@@ -102,6 +102,40 @@ public class Notices {
         nm.createNotificationChannel(ch);
     }
 
+    /** トークに返事が来たときの通知。タップでそのセッションを開き、緑の丸も消える */
+    public static void notifyTalk(Context c, Talk t) {
+        ensureChannel(c);
+        Intent open = new Intent(c, OpenActivity.class);
+        open.setAction(Intent.ACTION_VIEW);
+        open.setData(android.net.Uri.parse("talk://" + t.id));
+        open.putExtra("url", t.url);
+        open.putExtra("pkg", t.pkg);
+        open.putExtra("talk", t.id);
+        if (t.url == null || t.url.trim().isEmpty()) {
+            open = new Intent(c, TalkActivity.class);
+        }
+        open.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) flags |= PendingIntent.FLAG_IMMUTABLE;
+        PendingIntent pi = PendingIntent.getActivity(c, t.id.hashCode(), open, flags);
+
+        Notification.Builder b;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            b = new Notification.Builder(c, CHANNEL);
+        } else {
+            b = new Notification.Builder(c);
+        }
+        String body = t.last == null || t.last.isEmpty() ? "返事が来ています" : t.last;
+        b.setSmallIcon(android.R.drawable.stat_notify_chat)
+                .setContentTitle(t.name)
+                .setContentText(body)
+                .setStyle(new Notification.BigTextStyle().bigText(body))
+                .setAutoCancel(true)
+                .setContentIntent(pi);
+        NotificationManager nm = c.getSystemService(NotificationManager.class);
+        if (nm != null) nm.notify(Math.abs(("talk" + t.id).hashCode()), b.build());
+    }
+
     private static void notifyOne(Context c, String id, String title, String body, String url) {
         Intent open;
         if (url != null && !url.isEmpty()) {

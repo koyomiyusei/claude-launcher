@@ -17,6 +17,10 @@ public class Talk {
     public int color;
     /** 開き先アプリのパッケージ名。空なら Android に任せる */
     public String pkg;
+    /** サーバー（右腕コネクタ）側のid。手で足したトークは空 */
+    public String sid = "";
+    /** サーバー側の更新時刻のうち、ここまでは取り込み済み */
+    public long seen = 0;
 
     public Talk() {
         id = Store.newId();

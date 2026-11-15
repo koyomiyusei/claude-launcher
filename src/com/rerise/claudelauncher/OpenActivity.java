@@ -18,6 +18,18 @@ public class OpenActivity extends Activity {
             finish();
             return;
         }
+        String talkId = getIntent().getStringExtra("talk");
+        if (talkId != null) {
+            // 通知から開いたトークは既読にする
+            java.util.List<Talk> ts = TalkStore.load(this);
+            for (Talk t : ts) {
+                if (talkId.equals(t.id) && t.unread) {
+                    t.unread = false;
+                    TalkStore.save(this, ts);
+                    break;
+                }
+            }
+        }
         boolean browser = getIntent().getBooleanExtra("browser", false);
         String pkg = getIntent().getStringExtra("pkg");
         Intent view = new Intent(Intent.ACTION_VIEW, Uri.parse(url.trim()));

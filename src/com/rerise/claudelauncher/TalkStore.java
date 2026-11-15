@@ -52,6 +52,45 @@ public class TalkStore {
         prefs(c).edit().putString(KEY_CURRENT, tab).apply();
     }
 
+    // ---- サーバー連携（右腕メモの置き場と同じ「住所 合言葉」の1行）----
+
+    public static String serverUrl(Context c) {
+        return prefs(c).getString("server_url", "");
+    }
+
+    public static String serverToken(Context c) {
+        return prefs(c).getString("server_token", "");
+    }
+
+    public static boolean hasServer(Context c) {
+        return !serverUrl(c).isEmpty() && !serverToken(c).isEmpty();
+    }
+
+    public static void setServer(Context c, String url, String token) {
+        prefs(c).edit().putString("server_url", url).putString("server_token", token).apply();
+    }
+
+    /** スマホ側で消したサーバー由来のトーク。次の同期で復活させないための控え */
+    public static List<String> dismissed(Context c) {
+        List<String> out = new ArrayList<String>();
+        try {
+            JSONArray arr = new JSONArray(prefs(c).getString("dismissed", "[]"));
+            for (int i = 0; i < arr.length(); i++) out.add(arr.optString(i, ""));
+        } catch (Exception ignored) {
+        }
+        return out;
+    }
+
+    public static void addDismissed(Context c, String sid) {
+        List<String> d = dismissed(c);
+        if (d.contains(sid)) return;
+        d.add(sid);
+        while (d.size() > 300) d.remove(0);
+        JSONArray arr = new JSONArray();
+        for (String s : d) arr.put(s);
+        prefs(c).edit().putString("dismissed", arr.toString()).apply();
+    }
+
     public static List<Talk> load(Context c) {
         List<Talk> list = new ArrayList<Talk>();
         try {
@@ -69,6 +108,8 @@ public class TalkStore {
                 t.pinned = o.optBoolean("pinned", false);
                 t.color = o.optInt("color", Store.PALETTE[0]);
                 t.pkg = o.optString("pkg", "");
+                t.sid = o.optString("sid", "");
+                t.seen = o.optLong("seen", 0);
                 list.add(t);
             }
         } catch (Exception e) {
@@ -92,6 +133,8 @@ public class TalkStore {
                 o.put("pinned", t.pinned);
                 o.put("color", t.color);
                 o.put("pkg", t.pkg == null ? "" : t.pkg);
+                o.put("sid", t.sid == null ? "" : t.sid);
+                o.put("seen", t.seen);
                 arr.put(o);
             }
         } catch (Exception ignored) {

@@ -45,6 +45,11 @@ public class NoticeJob extends JobService {
                     Notices.checkAndNotify(getApplicationContext());
                 } catch (Exception ignored) {
                 }
+                try {
+                    // トークの同期。新しく返事が来たものは通知する
+                    TalkSync.syncAndNotify(getApplicationContext());
+                } catch (Exception ignored) {
+                }
                 jobFinished(params, false);
             }
         }).start();

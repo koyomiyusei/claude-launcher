@@ -43,7 +43,7 @@ import java.util.regex.Pattern;
 /**
  * LINEのトーク一覧ふうの入口画面。
  * 上にタブ帯（横スクロール）、下にそのタブのトーク。行をタップすると該当セッションを開く。
- * 「最後の一言」と緑の丸は、いまは手動（長押しメニュー・編集）。自動で届く仕組みは次の段階で足す。
+ * 「最後の一言」と緑の丸は、右腕コネクタ（talk_add / talk_update）から届く（TalkSync）。手でも付け外しできる。
  */
 public class TalkActivity extends Activity {
 
@@ -54,6 +54,8 @@ public class TalkActivity extends Activity {
 
     private static final int MENU_ICONS = 1;
     private static final int MENU_UPDATE = 2;
+    private static final int MENU_SERVER = 3;
+    private static final int MENU_SYNC = 4;
 
     private List<Talk> talks = new ArrayList<Talk>();
     private List<String> tabs = new ArrayList<String>();
@@ -143,6 +145,63 @@ public class TalkActivity extends Activity {
     protected void onResume() {
         super.onResume();
         reload();
+        sync(false);
+    }
+
+    /** サーバーから取ってきて混ぜる。loud=true のときだけ結果を知らせる */
+    private void sync(final boolean loud) {
+        if (!TalkStore.hasServer(this)) {
+            if (loud) toast("先に「サーバー連携」を設定してください");
+            return;
+        }
+        new Thread(() -> {
+            final org.json.JSONArray items = TalkSync.fetch(getApplicationContext());
+            runOnUiThread(() -> {
+                if (isFinishing()) return;
+                if (items == null) {
+                    if (loud) toast("同期できませんでした");
+                    return;
+                }
+                int n = TalkSync.merge(this, items).size();
+                reload();
+                if (loud) toast(n > 0 ? n + "件に返事が来ています" : "同期しました");
+            });
+        }).start();
+    }
+
+    private void showServerSetup() {
+        final EditText in = new EditText(this);
+        in.setSingleLine(true);
+        in.setHint("https://… 合言葉");
+        FrameLayout wrap = new FrameLayout(this);
+        wrap.setPadding(dp(20), dp(8), dp(20), 0);
+        wrap.addView(in);
+        boolean on = TalkStore.hasServer(this);
+        AlertDialog.Builder b = new AlertDialog.Builder(this)
+                .setTitle("サーバー連携")
+                .setMessage((on ? "いまは連携済みです（" + TalkStore.serverUrl(this) + "）。\n\n" : "")
+                        + "右腕メモの ⚙ →「メモの置き場」に貼ってあるのと同じ1行（住所と合言葉）を貼ってください。"
+                        + "Claudeに「トークに入れといて」と頼んだセッションが、ここに届くようになります。")
+                .setView(wrap)
+                .setNegativeButton("やめる", null)
+                .setPositiveButton("保存", (d, w) -> {
+                    String[] parts = in.getText().toString().trim().split("\\s+");
+                    if (parts.length < 2 || !parts[0].startsWith("https://")) {
+                        toast("「住所 合言葉」の形で貼ってください");
+                        return;
+                    }
+                    String base = parts[0];
+                    while (base.endsWith("/")) base = base.substring(0, base.length() - 1);
+                    TalkStore.setServer(this, base, parts[1]);
+                    sync(true);
+                });
+        if (on) {
+            b.setNeutralButton("連携を外す", (d, w) -> {
+                TalkStore.setServer(this, "", "");
+                toast("連携を外しました");
+            });
+        }
+        b.show();
     }
 
     @Override
@@ -154,8 +213,10 @@ public class TalkActivity extends Activity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(0, MENU_ICONS, 0, "アイコン一覧（ホーム画面用）");
-        menu.add(0, MENU_UPDATE, 1, "更新確認");
+        menu.add(0, MENU_SYNC, 0, "今すぐ同期");
+        menu.add(0, MENU_SERVER, 1, "サーバー連携");
+        menu.add(0, MENU_ICONS, 2, "アイコン一覧（ホーム画面用）");
+        menu.add(0, MENU_UPDATE, 3, "更新確認");
         return true;
     }
 
@@ -163,6 +224,14 @@ public class TalkActivity extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == MENU_ICONS) {
             startActivity(new Intent(this, MainActivity.class));
+            return true;
+        }
+        if (item.getItemId() == MENU_SYNC) {
+            sync(true);
+            return true;
+        }
+        if (item.getItemId() == MENU_SERVER) {
+            showServerSetup();
             return true;
         }
         if (item.getItemId() == MENU_UPDATE) {
@@ -391,6 +460,10 @@ public class TalkActivity extends Activity {
                                 .setMessage("「" + t.name + "」を一覧から削除しますか？\n（Claude側のセッションは消えません）")
                                 .setNegativeButton("やめる", null)
                                 .setPositiveButton("削除", (d2, w2) -> {
+                                    if (t.sid != null && !t.sid.isEmpty()) {
+                                        TalkStore.addDismissed(this, t.sid);
+                                        TalkSync.removeRemote(this, t.sid);
+                                    }
                                     talks.remove(t);
                                     persist();
                                 })
