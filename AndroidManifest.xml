@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.rerise.claudelauncher"
-    android:versionCode="6"
-    android:versionName="1.5">
+    android:versionCode="7"
+    android:versionName="2.0">
 
     <uses-sdk android:minSdkVersion="29" android:targetSdkVersion="35" />
 
@@ -42,8 +42,9 @@
         android:supportsRtl="false"
         android:theme="@android:style/Theme.DeviceDefault.DayNight">
 
+        <!-- 入口：LINEふうのトーク一覧（v2.0〜）。アイコン一覧（MainActivity）はメニューから開く -->
         <activity
-            android:name=".MainActivity"
+            android:name=".TalkActivity"
             android:label="@string/app_name"
             android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize"
@@ -52,6 +53,19 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter android:label="@string/share_talk_label">
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/app_name"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="true">
             <intent-filter android:label="@string/share_label">
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />

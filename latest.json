@@ -1,6 +1,6 @@
 {
-  "versionCode": 6,
-  "versionName": "1.5",
+  "versionCode": 7,
+  "versionName": "2.0",
   "apkUrl": "https://raw.githubusercontent.com/koyomiyusei/claude-launcher/main/ClaudeLauncher.apk",
-  "notes": "ホーム画面ウィジェット（登録した項目をリストで表示・タップで直接開く）"
+  "notes": "トーク画面を追加（タブ帯・ピン留め・緑の丸・最後の一言）。アイコン一覧は右上メニューから"
 }
