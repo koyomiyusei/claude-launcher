@@ -1,6 +1,6 @@
 {
-  "versionCode": 14,
-  "versionName": "2.7",
+  "versionCode": 15,
+  "versionName": "2.8",
   "apkUrl": "https://raw.githubusercontent.com/koyomiyusei/claude-launcher/main/ClaudeLauncher.apk",
   "notes": "ダークモードを追加（既定はダーク。メニューの「テーマ」で切替）"
 }
