@@ -1,6 +1,6 @@
 {
-  "versionCode": 13,
-  "versionName": "2.6",
+  "versionCode": 14,
+  "versionName": "2.7",
   "apkUrl": "https://raw.githubusercontent.com/koyomiyusei/claude-launcher/main/ClaudeLauncher.apk",
   "notes": "自動更新に対応。次の版からは、出たら勝手に入ります（この版だけは手で入れてください）"
 }
