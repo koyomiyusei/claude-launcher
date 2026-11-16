@@ -1,6 +1,6 @@
 {
-  "versionCode": 12,
-  "versionName": "2.5",
+  "versionCode": 13,
+  "versionName": "2.6",
   "apkUrl": "https://raw.githubusercontent.com/koyomiyusei/claude-launcher/main/ClaudeLauncher.apk",
   "notes": "プッシュ通知の取りこぼし対策（通信が通らないときは間をあけて再試行、それでもだめなら簡易通知）"
 }
