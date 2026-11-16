@@ -7,7 +7,10 @@ on:
       - 'src/**'
       - 'res/**'
       - 'AndroidManifest.xml'
-      - 'build.sh'
+      - 'build.gradle'
+      - 'settings.gradle'
+      - 'gradle.properties'
+      - 'proguard-rules.pro'
       - '.github/workflows/build.yml'
   workflow_dispatch:
 
@@ -25,6 +28,10 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+
       - name: 署名鍵を復元（Secretから。リポジトリには入れない）
         env:
           KS_B64: ${{ secrets.DEBUG_KEYSTORE_B64 }}
@@ -32,8 +39,26 @@ jobs:
           if [ -z "$KS_B64" ]; then echo "::error::DEBUG_KEYSTORE_B64 が未設定"; exit 1; fi
           echo "$KS_B64" | base64 -d > debug.keystore
 
-      - name: ビルド
-        run: bash build.sh
+      - name: ビルド（Gradle）
+        run: |
+          gradle --no-daemon assembleRelease
+          cp build/outputs/apk/release/ClaudeLauncher-release.apk ClaudeLauncher.apk
+          BT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | grep -v rc | sort -V | tail -1)"
+          "$BT/apksigner" verify --print-certs ClaudeLauncher.apk | grep -E "SHA-256|DN"
+
+      - name: latest.json のバージョンをマニフェストに合わせる
+        run: |
+          python3 - <<'PY'
+          import json, re
+          m = open('AndroidManifest.xml', encoding='utf-8').read()
+          vc = int(re.search(r'versionCode="(\d+)"', m).group(1))
+          vn = re.search(r'versionName="([^"]+)"', m).group(1)
+          d = json.load(open('latest.json', encoding='utf-8'))
+          d['versionCode'], d['versionName'] = vc, vn
+          with open('latest.json', 'w', encoding='utf-8') as f:
+              json.dump(d, f, ensure_ascii=False, indent=2); f.write('\n')
+          print(f'latest.json -> {vc} / {vn}')
+          PY
 
       - name: 鍵を消す
         if: always()

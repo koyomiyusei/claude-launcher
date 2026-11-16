@@ -7,3 +7,7 @@ debug.keystore
 build/
 build.log
 *.idsig
+
+# Gradle
+.gradle/
+local.properties

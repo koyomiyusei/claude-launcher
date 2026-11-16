@@ -160,6 +160,7 @@ public class TalkActivity extends Activity {
         super.onResume();
         reload();
         sync(false);
+        Push.ensure(this);
     }
 
     /** サーバーから取ってきて混ぜる。loud=true のときだけ結果を知らせる */
@@ -207,11 +208,14 @@ public class TalkActivity extends Activity {
                     String base = parts[0];
                     while (base.endsWith("/")) base = base.substring(0, base.length() - 1);
                     TalkStore.setServer(this, base, parts[1]);
+                    Push.forget(this);
                     sync(true);
+                    Push.ensure(this);
                 });
         if (on) {
             b.setNeutralButton("連携を外す", (d, w) -> {
                 TalkStore.setServer(this, "", "");
+                Push.forget(this);
                 toast("連携を外しました");
             });
         }
@@ -226,14 +230,19 @@ public class TalkActivity extends Activity {
     }
 
     private void showMainMenu() {
-        String[] items = {"今すぐ同期", "サーバー連携", "アイコン一覧（ホーム画面用）", "更新確認"};
+        String[] items = {"今すぐ同期", "サーバー連携", "アイコン一覧（ホーム画面用）", "更新確認",
+                "プッシュ通知: " + Push.state(this)};
         new AlertDialog.Builder(this)
                 .setTitle("メニュー  v" + Updater.currentName(this))
                 .setItems(items, (d, which) -> {
                     if (which == 0) sync(true);
                     else if (which == 1) showServerSetup();
                     else if (which == 2) startActivity(new Intent(this, MainActivity.class));
-                    else Updater.check(this, false);
+                    else if (which == 3) Updater.check(this, false);
+                    else {
+                        Push.ensure(this);
+                        toast("プッシュ通知の準備をやり直しました");
+                    }
                 })
                 .show();
     }

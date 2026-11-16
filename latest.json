@@ -2,5 +2,5 @@
   "versionCode": 9,
   "versionName": "2.2",
   "apkUrl": "https://raw.githubusercontent.com/koyomiyusei/claude-launcher/main/ClaudeLauncher.apk",
-  "notes": "トーク画面の右上に「メニュー ⋮」ボタンを追加（同期・サーバー連携・アイコン一覧・更新確認）"
+  "notes": "プッシュ通知に対応（返事が来たらすぐ通知）。メニューの一番下で状態を確認できます"
 }
