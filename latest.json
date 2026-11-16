@@ -2,5 +2,5 @@
   "versionCode": 12,
   "versionName": "2.5",
   "apkUrl": "https://raw.githubusercontent.com/koyomiyusei/claude-launcher/main/ClaudeLauncher.apk",
-  "notes": "トークの時刻が途中で切れる表示を修正"
+  "notes": "プッシュ通知の取りこぼし対策（通信が通らないときは間をあけて再試行、それでもだめなら簡易通知）"
 }

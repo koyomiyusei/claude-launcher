@@ -111,11 +111,35 @@ public class TalkSync {
         return fresh;
     }
 
-    /** 定期ジョブ用。取ってきて混ぜ、新しく返事が来たものを通知する */
-    public static void syncAndNotify(Context c) {
+    /** 定期ジョブ・プッシュ受信用。取ってきて混ぜ、新しく返事が来たものを通知する。通信できなければ false */
+    public static boolean syncAndNotify(Context c) {
         JSONArray items = fetch(c);
-        if (items == null) return;
+        if (items == null) return false;
         for (Talk t : merge(c, items)) Notices.notifyTalk(c, t);
+        return true;
+    }
+
+    /**
+     * プッシュは届いたのにサーバーへ取りに行けなかったとき用。
+     * 手元の一覧から相手を探して、とりあえず「返事が来ています」と知らせる（文面は次の同期で入る）。
+     */
+    public static void notifyWithoutSync(Context c, String sid) {
+        if (sid == null || sid.isEmpty()) return;
+        List<Talk> talks = TalkStore.load(c);
+        for (Talk t : talks) {
+            if (!sid.equals(t.sid)) continue;
+            t.unread = true;
+            t.time = System.currentTimeMillis();
+            TalkStore.save(c, talks);
+            Talk shown = new Talk();
+            shown.id = t.id;
+            shown.name = t.name;
+            shown.url = t.url;
+            shown.pkg = t.pkg;
+            shown.last = "返事が来ています";
+            Notices.notifyTalk(c, shown);
+            return;
+        }
     }
 
     /** スマホ側で消したトークを、サーバーからも外す（失敗しても手元の控えで復活は防ぐ） */

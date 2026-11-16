@@ -12,9 +12,22 @@ public class PushService extends FirebaseMessagingService {
 
     @Override
     public void onMessageReceived(RemoteMessage message) {
-        try {
-            TalkSync.syncAndNotify(getApplicationContext());
-        } catch (Exception ignored) {
+        // 端末が眠りから覚めた直後は通信がまだ通らないことがあるので、少し間をあけて3回まで試す
+        boolean ok = false;
+        long[] waits = {0, 3000, 6000};
+        for (long w : waits) {
+            try {
+                if (w > 0) Thread.sleep(w);
+                ok = TalkSync.syncAndNotify(getApplicationContext());
+            } catch (Exception ignored) {
+            }
+            if (ok) break;
+        }
+        if (!ok) {
+            try {
+                TalkSync.notifyWithoutSync(getApplicationContext(), message.getData().get("id"));
+            } catch (Exception ignored) {
+            }
         }
     }
 
