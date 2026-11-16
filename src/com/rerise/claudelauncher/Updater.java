@@ -356,6 +356,11 @@ public class Updater {
      * 入れ終わるとアプリは一度止まり、UpdateReceiver が「更新しました」を知らせる。
      */
     public static void silentUpdate(Context context, boolean force) {
+        silentUpdate(context, force, true);
+    }
+
+    /** install=false のときは、新しい版があっても入れずに「タップして更新」の通知だけ出す */
+    public static void silentUpdate(Context context, boolean force, boolean install) {
         final Context c = context.getApplicationContext();
         SharedPreferences p = c.getSharedPreferences(PREF, Context.MODE_PRIVATE);
         long now = System.currentTimeMillis();
@@ -388,6 +393,11 @@ public class Updater {
                 return;
             }
             if (url.isEmpty()) throw new Exception("apkUrl なし");
+            if (!install) {
+                setAutoState(c, "v" + name + " があります（通知から更新）");
+                UpdateReceiver.askToUpdate(c, name);
+                return;
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !c.getPackageManager().canRequestPackageInstalls()) {
                 setAutoState(c, "v" + name + " あり。「この提供元のアプリを許可」が必要（更新確認から）");
                 UpdateReceiver.askToUpdate(c, name);

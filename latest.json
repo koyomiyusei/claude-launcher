@@ -2,5 +2,5 @@
   "versionCode": 16,
   "versionName": "2.9",
   "apkUrl": "https://raw.githubusercontent.com/koyomiyusei/claude-launcher/main/ClaudeLauncher.apk",
-  "notes": "質問・承認待ちで止まっているトークはオレンジの丸と【確認待ち】の通知で知らせる（完了は今までどおり緑）"
+  "notes": "通知の取りこぼし対策（合図に中身を載せて通信なしで即通知・目立つ通知に）。確認待ちはオレンジ。更新は通知をタップしたときだけ入る"
 }

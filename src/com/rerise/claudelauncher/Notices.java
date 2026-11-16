@@ -32,6 +32,8 @@ public class Notices {
     private static final String KEY_SEEN = "seen_notice_ids";
     private static final String KEY_ENABLED = "notices_enabled";
     private static final String CHANNEL = "claude_notices";
+    /** トークの返事用。目立つように（画面上部にポップアップ）重要度を高くした別チャンネル */
+    private static final String TALK_CHANNEL = "claude_talk_reply";
     private static final int MAX_SEEN = 200;
 
     public static boolean enabled(Context c) {
@@ -92,6 +94,16 @@ public class Notices {
         }
     }
 
+    private static void ensureTalkChannel(Context c) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+        NotificationManager nm = c.getSystemService(NotificationManager.class);
+        if (nm == null || nm.getNotificationChannel(TALK_CHANNEL) != null) return;
+        NotificationChannel ch = new NotificationChannel(TALK_CHANNEL, "セッションの返事",
+                NotificationManager.IMPORTANCE_HIGH);
+        ch.setDescription("トークに入れたセッションの「完了」「確認待ち」");
+        nm.createNotificationChannel(ch);
+    }
+
     private static void ensureChannel(Context c) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
         NotificationManager nm = c.getSystemService(NotificationManager.class);
@@ -128,7 +140,7 @@ public class Notices {
 
     /** トークに返事が来たときの通知。タップでそのセッションを開き、緑の丸も消える */
     public static void notifyTalk(Context c, Talk t) {
-        ensureChannel(c);
+        ensureTalkChannel(c);
         Intent open = new Intent(c, OpenActivity.class);
         open.setAction(Intent.ACTION_VIEW);
         open.setData(android.net.Uri.parse("talk://" + t.id));
@@ -145,7 +157,7 @@ public class Notices {
 
         Notification.Builder b;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            b = new Notification.Builder(c, CHANNEL);
+            b = new Notification.Builder(c, TALK_CHANNEL);
         } else {
             b = new Notification.Builder(c);
         }

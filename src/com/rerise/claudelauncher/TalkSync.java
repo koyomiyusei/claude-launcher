@@ -121,6 +121,41 @@ public class TalkSync {
     }
 
     /**
+     * プッシュに載ってきた中身（名前・最後の一言・状態）をそのまま手元に反映し、通知用のトークを返す。
+     * 通信しないので、端末が眠っていてもすぐ通知を出せる。細かい所はあとの同期で揃う。
+     */
+    public static Talk applyPush(Context c, java.util.Map<String, String> d) {
+        String sid = d.get("id");
+        if (sid == null || sid.isEmpty()) return null;
+        boolean ask = "ask".equals(d.get("state"));
+        String last = d.get("last") == null ? "" : d.get("last");
+        List<Talk> talks = TalkStore.load(c);
+        for (Talk t : talks) {
+            if (!sid.equals(t.sid)) continue;
+            t.unread = true;
+            t.ask = ask;
+            if (!last.isEmpty()) t.last = last;
+            t.time = System.currentTimeMillis();
+            TalkStore.save(c, talks);
+            return t;
+        }
+        // まだ手元に無いトーク（増えた直後）。通知だけ出して、一覧への追加は同期に任せる
+        Talk t = new Talk();
+        t.id = "push-" + sid;
+        t.name = d.get("name") == null ? "Claude" : d.get("name");
+        t.url = d.get("url") == null ? "" : d.get("url");
+        t.last = last;
+        t.ask = ask;
+        return t;
+    }
+
+    /** 同期するが通知は出さない（プッシュで通知を出したあと用） */
+    public static void syncQuiet(Context c) {
+        JSONArray items = fetch(c);
+        if (items != null) merge(c, items);
+    }
+
+    /**
      * プッシュは届いたのにサーバーへ取りに行けなかったとき用。
      * 手元の一覧から相手を探して、とりあえず「返事が来ています」と知らせる（文面は次の同期で入る）。
      */

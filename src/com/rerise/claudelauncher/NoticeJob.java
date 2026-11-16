@@ -52,7 +52,7 @@ public class NoticeJob extends JobService {
                 }
                 try {
                     // 新しい版が出ていれば入れる（6時間に1回だけ見に行く）
-                    Updater.silentUpdate(getApplicationContext(), false);
+                    Updater.silentUpdate(getApplicationContext(), false, false);
                 } catch (Exception ignored) {
                 }
                 jobFinished(params, false);

@@ -148,7 +148,7 @@ public class TalkActivity extends Activity {
 
         reload();
         handleIncoming(getIntent());
-        if (getIntent() != null && getIntent().getBooleanExtra("update", false)) Updater.check(this, false);
+        if (getIntent() != null && getIntent().getBooleanExtra("update", false)) installUpdateNow();
         Updater.autoCheck(this);
         NoticeJob.schedule(this);
         if (Build.VERSION.SDK_INT >= 33
@@ -230,7 +230,14 @@ public class TalkActivity extends Activity {
         super.onNewIntent(intent);
         setIntent(intent);
         handleIncoming(intent);
-        if (intent != null && intent.getBooleanExtra("update", false)) Updater.check(this, false);
+        if (intent != null && intent.getBooleanExtra("update", false)) installUpdateNow();
+    }
+
+    /** 「新しい版があります」の通知から来たとき。確認ダイアログを挟まずに落として入れる */
+    private void installUpdateNow() {
+        getIntent().removeExtra("update");
+        toast("新しい版を入れています…");
+        new Thread(() -> Updater.silentUpdate(getApplicationContext(), true, true)).start();
     }
 
     private void showMainMenu() {
