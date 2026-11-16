@@ -80,6 +80,10 @@ public class TalkSync {
                 t.color = Store.PALETTE[talks.size() % Store.PALETTE.length];
                 t.pkg = defaultPkg(c);
                 t.tab = tabs.get(0);
+                // 自分で並べているときは、新入りを一番上に置く
+                long min = 0;
+                for (Talk x : talks) min = Math.min(min, x.order);
+                t.order = min - 1;
                 talks.add(t);
             } else if (updated <= t.seen) {
                 continue;

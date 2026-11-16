@@ -52,6 +52,15 @@ public class TalkStore {
         prefs(c).edit().putString(KEY_CURRENT, tab).apply();
     }
 
+    /** 並び順。false=新しい順（既定） / true=自分で並べる */
+    public static boolean manualOrder(Context c) {
+        return prefs(c).getBoolean("manual_order", false);
+    }
+
+    public static void setManualOrder(Context c, boolean on) {
+        prefs(c).edit().putBoolean("manual_order", on).apply();
+    }
+
     // ---- サーバー連携（右腕メモの置き場と同じ「住所 合言葉」の1行）----
 
     public static String serverUrl(Context c) {
@@ -110,6 +119,7 @@ public class TalkStore {
                 t.pkg = o.optString("pkg", "");
                 t.sid = o.optString("sid", "");
                 t.seen = o.optLong("seen", 0);
+                t.order = o.optLong("order", 0);
                 list.add(t);
             }
         } catch (Exception e) {
@@ -135,6 +145,7 @@ public class TalkStore {
                 o.put("pkg", t.pkg == null ? "" : t.pkg);
                 o.put("sid", t.sid == null ? "" : t.sid);
                 o.put("seen", t.seen);
+                o.put("order", t.order);
                 arr.put(o);
             }
         } catch (Exception ignored) {

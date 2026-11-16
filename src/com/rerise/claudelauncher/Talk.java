@@ -21,6 +21,8 @@ public class Talk {
     public String sid = "";
     /** サーバー側の更新時刻のうち、ここまでは取り込み済み */
     public long seen = 0;
+    /** 自分で並べるときの位置（小さいほど上） */
+    public long order = 0;
 
     public Talk() {
         id = Store.newId();

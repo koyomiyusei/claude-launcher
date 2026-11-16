@@ -231,7 +231,8 @@ public class TalkActivity extends Activity {
 
     private void showMainMenu() {
         String[] items = {"今すぐ同期", "サーバー連携", "アイコン一覧（ホーム画面用）", "更新確認",
-                "プッシュ通知: " + Push.state(this)};
+                "プッシュ通知: " + Push.state(this),
+                "並び順: " + (TalkStore.manualOrder(this) ? "自分で並べる" : "新しい順") + "（タップで切替）"};
         new AlertDialog.Builder(this)
                 .setTitle("メニュー  v" + Updater.currentName(this))
                 .setItems(items, (d, which) -> {
@@ -239,10 +240,10 @@ public class TalkActivity extends Activity {
                     else if (which == 1) showServerSetup();
                     else if (which == 2) startActivity(new Intent(this, MainActivity.class));
                     else if (which == 3) Updater.check(this, false);
-                    else {
+                    else if (which == 4) {
                         Push.ensure(this);
                         toast("プッシュ通知の準備をやり直しました");
-                    }
+                    } else toggleOrder();
                 })
                 .show();
     }
@@ -272,14 +273,56 @@ public class TalkActivity extends Activity {
         for (Talk t : talks) {
             if (current.equals(t.tab)) visible.add(t);
         }
-        // ピン留めが上、その中では新しい順
+        // ピン留めが上。その中は「新しい順」か「自分で並べた順」
+        final boolean manual = TalkStore.manualOrder(this);
         Collections.sort(visible, new Comparator<Talk>() {
             public int compare(Talk a, Talk b) {
                 if (a.pinned != b.pinned) return a.pinned ? -1 : 1;
+                if (manual && a.order != b.order) return Long.compare(a.order, b.order);
                 return Long.compare(b.time, a.time);
             }
         });
         adapter.notifyDataSetChanged();
+    }
+
+    /** 並び順を切り替える。自分で並べる側へ移るときは、いま見えている順をそのまま出発点にする */
+    private void toggleOrder() {
+        boolean manual = !TalkStore.manualOrder(this);
+        if (manual) {
+            List<Talk> sorted = new ArrayList<Talk>(talks);
+            Collections.sort(sorted, new Comparator<Talk>() {
+                public int compare(Talk a, Talk b) {
+                    return Long.compare(b.time, a.time);
+                }
+            });
+            long n = 1;
+            for (Talk t : sorted) t.order = n++;
+        }
+        TalkStore.setManualOrder(this, manual);
+        persist();
+        toast(manual ? "自分で並べる：行を長押し →「上へ」「下へ」" : "新しい順に戻しました");
+    }
+
+    /** 見えている一覧の中で1つ動かす（ピン留めの組をまたがない）。dir=-1 上 / +1 下 / 0 一番上 */
+    private void move(Talk t, int dir) {
+        int i = visible.indexOf(t);
+        if (i < 0) return;
+        if (dir == 0) {
+            long min = t.order;
+            for (Talk x : visible) {
+                if (x.pinned == t.pinned) min = Math.min(min, x.order);
+            }
+            t.order = min - 1;
+        } else {
+            int j = i + dir;
+            if (j < 0 || j >= visible.size() || visible.get(j).pinned != t.pinned) return;
+            Talk o = visible.get(j);
+            long tmp = t.order;
+            t.order = o.order;
+            o.order = tmp;
+            if (t.order == o.order) t.order += dir; // 同じ値どうしだったときの保険
+        }
+        persist();
     }
 
     private void persist() {
@@ -443,12 +486,17 @@ public class TalkActivity extends Activity {
     }
 
     private void showRowMenu(final Talk t) {
-        String[] items = {
+        final boolean manual = TalkStore.manualOrder(this);
+        String[] base = {
                 t.pinned ? "ピン留めを外す" : "ピン留めする",
                 t.unread ? "緑の丸を消す" : "緑の丸を付ける",
                 "編集",
                 "削除"
         };
+        String[] items = base;
+        if (manual) {
+            items = new String[]{base[0], base[1], base[2], base[3], "↑ 上へ", "↓ 下へ", "⤒ 一番上へ"};
+        }
         new AlertDialog.Builder(this)
                 .setTitle(t.name)
                 .setItems(items, (d, which) -> {
@@ -461,6 +509,12 @@ public class TalkActivity extends Activity {
                         persist();
                     } else if (which == 2) {
                         showEditor(t, null, null);
+                    } else if (which == 4) {
+                        move(t, -1);
+                    } else if (which == 5) {
+                        move(t, 1);
+                    } else if (which == 6) {
+                        move(t, 0);
                     } else {
                         new AlertDialog.Builder(this)
                                 .setMessage("「" + t.name + "」を一覧から削除しますか？\n（Claude側のセッションは消えません）")
@@ -563,6 +617,9 @@ public class TalkActivity extends Activity {
                     t.pkg = pkgChoice[0];
                     if (isNew) {
                         t.color = Store.PALETTE[talks.size() % Store.PALETTE.length];
+                        long min = 0;
+                        for (Talk x : talks) min = Math.min(min, x.order);
+                        t.order = min - 1;
                         t.time = System.currentTimeMillis();
                         talks.add(t);
                         current = t.tab;

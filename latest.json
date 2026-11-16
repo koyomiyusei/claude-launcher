@@ -2,5 +2,5 @@
   "versionCode": 10,
   "versionName": "2.3",
   "apkUrl": "https://raw.githubusercontent.com/koyomiyusei/claude-launcher/main/ClaudeLauncher.apk",
-  "notes": "プッシュ通知に対応（返事が来たらすぐ通知）。メニューの一番下で状態を確認できます"
+  "notes": "トークの並び順を自分で変えられるように（メニュー →「並び順」で切替、行を長押し →「上へ」「下へ」）"
 }
