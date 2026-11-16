@@ -102,6 +102,7 @@ public class TalkSync {
             t.seen = updated;
             if (o.optBoolean("unread", false)) {
                 t.unread = true;
+                t.ask = "ask".equals(o.optString("state", ""));
                 fresh.add(t);
             }
             changed = true;

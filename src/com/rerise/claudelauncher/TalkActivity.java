@@ -48,6 +48,7 @@ public class TalkActivity extends Activity {
     private static final Pattern URL_RE = Pattern.compile("https?://[^\\s<>\"']+");
     private static final int ACCENT = 0xFFD97757;
     private static final int GREEN = 0xFF06C755;
+    private static final int ORANGE = 0xFFFF9500;
     private static final String CLAUDE_APP = "com.anthropic.claude";
 
 
@@ -501,7 +502,7 @@ public class TalkActivity extends Activity {
         final boolean manual = TalkStore.manualOrder(this);
         String[] base = {
                 t.pinned ? "ピン留めを外す" : "ピン留めする",
-                t.unread ? "緑の丸を消す" : "緑の丸を付ける",
+                t.unread ? "丸を消す" : "緑の丸を付ける",
                 "編集",
                 "削除"
         };
@@ -517,6 +518,7 @@ public class TalkActivity extends Activity {
                         persist();
                     } else if (which == 1) {
                         t.unread = !t.unread;
+                        t.ask = false;
                         if (t.unread) t.time = System.currentTimeMillis();
                         persist();
                     } else if (which == 2) {
@@ -835,7 +837,7 @@ public class TalkActivity extends Activity {
                     ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
             View dot = new View(c);
-            dot.setBackground(IconGen.dot(GREEN));
+            dot.setBackground(IconGen.dot(t.ask ? ORANGE : GREEN));
             dot.setVisibility(t.unread ? View.VISIBLE : View.INVISIBLE);
             LinearLayout.LayoutParams dp2 = new LinearLayout.LayoutParams(dp(14), dp(14));
             dp2.topMargin = dp(6);

@@ -13,6 +13,8 @@ public class Talk {
     public long time;
     /** 返事が来ている（緑の丸） */
     public boolean unread;
+    /** 丸の意味。false=作業が終わった（緑） / true=質問・承認待ちで止まっている（オレンジ） */
+    public boolean ask;
     public boolean pinned;
     public int color;
     /** 開き先アプリのパッケージ名。空なら Android に任せる */

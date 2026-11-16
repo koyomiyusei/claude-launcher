@@ -114,6 +114,7 @@ public class TalkStore {
                 t.last = o.optString("last", "");
                 t.time = o.optLong("time", System.currentTimeMillis());
                 t.unread = o.optBoolean("unread", false);
+                t.ask = o.optBoolean("ask", false);
                 t.pinned = o.optBoolean("pinned", false);
                 t.color = o.optInt("color", Store.PALETTE[0]);
                 t.pkg = o.optString("pkg", "");
@@ -140,6 +141,7 @@ public class TalkStore {
                 o.put("last", t.last == null ? "" : t.last);
                 o.put("time", t.time);
                 o.put("unread", t.unread);
+                o.put("ask", t.ask);
                 o.put("pinned", t.pinned);
                 o.put("color", t.color);
                 o.put("pkg", t.pkg == null ? "" : t.pkg);

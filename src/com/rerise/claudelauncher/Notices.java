@@ -150,6 +150,8 @@ public class Notices {
             b = new Notification.Builder(c);
         }
         String body = t.last == null || t.last.isEmpty() ? "返事が来ています" : t.last;
+        // 質問・承認待ちは、通知でもひと目で分かるようにする
+        if (t.ask) body = "【確認待ち】" + body;
         b.setSmallIcon(android.R.drawable.stat_notify_chat)
                 .setContentTitle(t.name)
                 .setContentText(body)
