@@ -61,6 +61,7 @@ public class TalkActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Theme.apply(this);
         super.onCreate(savedInstanceState);
         // 端末によっては上のバー（とその中のメニュー）が出ないので、自前の見出しとメニューボタンを置く
         if (getActionBar() != null) getActionBar().hide();
@@ -235,7 +236,8 @@ public class TalkActivity extends Activity {
         String[] items = {"今すぐ同期", "サーバー連携", "アイコン一覧（ホーム画面用）", "更新確認",
                 "プッシュ通知: " + Push.state(this),
                 "並び順: " + (TalkStore.manualOrder(this) ? "自分で並べる" : "新しい順") + "（タップで切替）",
-                "自動更新: " + Updater.autoState(this)};
+                "自動更新: " + Updater.autoState(this),
+                "テーマ: " + Theme.label(this) + "（タップで切替）"};
         new AlertDialog.Builder(this)
                 .setTitle("メニュー  v" + Updater.currentName(this))
                 .setItems(items, (d, which) -> {
@@ -247,9 +249,12 @@ public class TalkActivity extends Activity {
                         Push.ensure(this);
                         toast("プッシュ通知の準備をやり直しました");
                     } else if (which == 5) toggleOrder();
-                    else {
+                    else if (which == 6) {
                         toast("新しい版を確認します");
                         new Thread(() -> Updater.silentUpdate(getApplicationContext(), true)).start();
+                    } else {
+                        Theme.next(this);
+                        recreate();
                     }
                 })
                 .show();
