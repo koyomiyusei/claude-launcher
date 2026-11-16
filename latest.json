@@ -2,5 +2,5 @@
   "versionCode": 8,
   "versionName": "2.1",
   "apkUrl": "https://raw.githubusercontent.com/koyomiyusei/claude-launcher/main/ClaudeLauncher.apk",
-  "notes": "トーク画面＋サーバー連携。Claudeに「トークに入れといて」と頼むと一覧に届き、作業が終わると緑の丸と通知が付く（右上メニュー→サーバー連携で設定）"
+  "notes": "トーク画面の右上に「メニュー ⋮」ボタンを追加（同期・サーバー連携・アイコン一覧・更新確認）"
 }

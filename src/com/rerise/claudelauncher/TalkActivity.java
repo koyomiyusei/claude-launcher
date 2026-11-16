@@ -17,8 +17,6 @@ import android.text.InputType;
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -52,10 +50,6 @@ public class TalkActivity extends Activity {
     private static final int GREEN = 0xFF06C755;
     private static final String CLAUDE_APP = "com.anthropic.claude";
 
-    private static final int MENU_ICONS = 1;
-    private static final int MENU_UPDATE = 2;
-    private static final int MENU_SERVER = 3;
-    private static final int MENU_SYNC = 4;
 
     private List<Talk> talks = new ArrayList<Talk>();
     private List<String> tabs = new ArrayList<String>();
@@ -68,11 +62,31 @@ public class TalkActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getActionBar() != null) getActionBar().setTitle("トーク");
+        // 端末によっては上のバー（とその中のメニュー）が出ないので、自前の見出しとメニューボタンを置く
+        if (getActionBar() != null) getActionBar().hide();
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setFitsSystemWindows(true);
+
+        LinearLayout header = new LinearLayout(this);
+        header.setOrientation(LinearLayout.HORIZONTAL);
+        header.setGravity(Gravity.CENTER_VERTICAL);
+        header.setPadding(dp(18), dp(10), dp(6), 0);
+        TextView title = new TextView(this);
+        title.setText("トーク");
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22);
+        title.setTypeface(Typeface.DEFAULT_BOLD);
+        header.addView(title, new LinearLayout.LayoutParams(0,
+                ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        final TextView more = new TextView(this);
+        more.setText("メニュー ⋮");
+        more.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
+        more.setPadding(dp(14), dp(10), dp(14), dp(10));
+        more.setOnClickListener(v -> showMainMenu());
+        header.addView(more);
+        root.addView(header, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
         HorizontalScrollView hs = new HorizontalScrollView(this);
         hs.setHorizontalScrollBarEnabled(false);
@@ -211,34 +225,17 @@ public class TalkActivity extends Activity {
         handleIncoming(intent);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(0, MENU_SYNC, 0, "今すぐ同期");
-        menu.add(0, MENU_SERVER, 1, "サーバー連携");
-        menu.add(0, MENU_ICONS, 2, "アイコン一覧（ホーム画面用）");
-        menu.add(0, MENU_UPDATE, 3, "更新確認");
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == MENU_ICONS) {
-            startActivity(new Intent(this, MainActivity.class));
-            return true;
-        }
-        if (item.getItemId() == MENU_SYNC) {
-            sync(true);
-            return true;
-        }
-        if (item.getItemId() == MENU_SERVER) {
-            showServerSetup();
-            return true;
-        }
-        if (item.getItemId() == MENU_UPDATE) {
-            Updater.check(this, false);
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+    private void showMainMenu() {
+        String[] items = {"今すぐ同期", "サーバー連携", "アイコン一覧（ホーム画面用）", "更新確認"};
+        new AlertDialog.Builder(this)
+                .setTitle("メニュー  v" + Updater.currentName(this))
+                .setItems(items, (d, which) -> {
+                    if (which == 0) sync(true);
+                    else if (which == 1) showServerSetup();
+                    else if (which == 2) startActivity(new Intent(this, MainActivity.class));
+                    else Updater.check(this, false);
+                })
+                .show();
     }
 
     // ---------------- 読み込みと並べ替え ----------------
