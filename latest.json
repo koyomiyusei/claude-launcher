@@ -2,5 +2,5 @@
   "versionCode": 11,
   "versionName": "2.4",
   "apkUrl": "https://raw.githubusercontent.com/koyomiyusei/claude-launcher/main/ClaudeLauncher.apk",
-  "notes": "トークの並び順を自分で変えられるように（メニュー →「並び順」で切替、行を長押し →「上へ」「下へ」）"
+  "notes": "トークの時刻が途中で切れる表示を修正"
 }

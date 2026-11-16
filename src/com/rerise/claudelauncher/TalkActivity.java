@@ -817,7 +817,10 @@ public class TalkActivity extends Activity {
             time.setText(timeLabel(t.time));
             time.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
             time.setAlpha(0.5f);
-            right.addView(time);
+            time.setSingleLine(true);
+            // 幅を「中身ぶん」と明示する。既定（親いっぱい）のままだと、右の列の幅が緑の丸の幅で決まってしまい、時刻が切れる
+            right.addView(time, new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
             View dot = new View(c);
             dot.setBackground(IconGen.dot(GREEN));
