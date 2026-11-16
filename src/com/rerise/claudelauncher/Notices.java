@@ -102,6 +102,30 @@ public class Notices {
         nm.createNotificationChannel(ch);
     }
 
+    /** 一言だけの通知（自動更新の結果など）。open を渡すとタップで開く */
+    public static void notifySimple(Context c, int id, String title, String body, Intent open) {
+        ensureChannel(c);
+        Notification.Builder b;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            b = new Notification.Builder(c, CHANNEL);
+        } else {
+            b = new Notification.Builder(c);
+        }
+        b.setSmallIcon(android.R.drawable.stat_sys_download_done)
+                .setContentTitle(title)
+                .setContentText(body)
+                .setStyle(new Notification.BigTextStyle().bigText(body))
+                .setAutoCancel(true);
+        if (open != null) {
+            open.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) flags |= PendingIntent.FLAG_IMMUTABLE;
+            b.setContentIntent(PendingIntent.getActivity(c, id, open, flags));
+        }
+        NotificationManager nm = c.getSystemService(NotificationManager.class);
+        if (nm != null) nm.notify(id, b.build());
+    }
+
     /** トークに返事が来たときの通知。タップでそのセッションを開き、緑の丸も消える */
     public static void notifyTalk(Context c, Talk t) {
         ensureChannel(c);

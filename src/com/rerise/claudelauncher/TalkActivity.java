@@ -146,6 +146,7 @@ public class TalkActivity extends Activity {
 
         reload();
         handleIncoming(getIntent());
+        if (getIntent() != null && getIntent().getBooleanExtra("update", false)) Updater.check(this, false);
         Updater.autoCheck(this);
         NoticeJob.schedule(this);
         if (Build.VERSION.SDK_INT >= 33
@@ -227,12 +228,14 @@ public class TalkActivity extends Activity {
         super.onNewIntent(intent);
         setIntent(intent);
         handleIncoming(intent);
+        if (intent != null && intent.getBooleanExtra("update", false)) Updater.check(this, false);
     }
 
     private void showMainMenu() {
         String[] items = {"今すぐ同期", "サーバー連携", "アイコン一覧（ホーム画面用）", "更新確認",
                 "プッシュ通知: " + Push.state(this),
-                "並び順: " + (TalkStore.manualOrder(this) ? "自分で並べる" : "新しい順") + "（タップで切替）"};
+                "並び順: " + (TalkStore.manualOrder(this) ? "自分で並べる" : "新しい順") + "（タップで切替）",
+                "自動更新: " + Updater.autoState(this)};
         new AlertDialog.Builder(this)
                 .setTitle("メニュー  v" + Updater.currentName(this))
                 .setItems(items, (d, which) -> {
@@ -243,7 +246,11 @@ public class TalkActivity extends Activity {
                     else if (which == 4) {
                         Push.ensure(this);
                         toast("プッシュ通知の準備をやり直しました");
-                    } else toggleOrder();
+                    } else if (which == 5) toggleOrder();
+                    else {
+                        toast("新しい版を確認します");
+                        new Thread(() -> Updater.silentUpdate(getApplicationContext(), true)).start();
+                    }
                 })
                 .show();
     }

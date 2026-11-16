@@ -50,6 +50,11 @@ public class NoticeJob extends JobService {
                     TalkSync.syncAndNotify(getApplicationContext());
                 } catch (Exception ignored) {
                 }
+                try {
+                    // 新しい版が出ていれば入れる（6時間に1回だけ見に行く）
+                    Updater.silentUpdate(getApplicationContext(), false);
+                } catch (Exception ignored) {
+                }
                 jobFinished(params, false);
             }
         }).start();

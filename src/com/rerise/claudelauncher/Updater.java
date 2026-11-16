@@ -218,6 +218,10 @@ public class Updater {
                     PackageInstaller.SessionParams params = new PackageInstaller.SessionParams(
                             PackageInstaller.SessionParams.MODE_FULL_INSTALL);
                     if (total > 0) params.setSize(total);
+                    // 自分自身の更新なので、端末が許せば「更新しますか？」を出さずに入れる（Android 12〜）
+                    if (Build.VERSION.SDK_INT >= 31) {
+                        params.setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED);
+                    }
                     final int sid = pi.createSession(params);
                     session = pi.openSession(sid);
 
@@ -328,6 +332,113 @@ public class Updater {
             a.registerReceiver(receiver, f, Context.RECEIVER_NOT_EXPORTED);
         } else {
             a.registerReceiver(receiver, f);
+        }
+    }
+
+    // ---------------- 自動更新（画面なし） ----------------
+
+    private static final String KEY_AUTO_STATE = "auto_update_state";
+    private static final String KEY_AUTO_LAST = "auto_update_last";
+    private static volatile boolean autoRunning = false;
+
+    /** 自動更新のいまの状態（メニューに出す） */
+    public static String autoState(Context c) {
+        return c.getSharedPreferences(PREF, Context.MODE_PRIVATE).getString(KEY_AUTO_STATE, "まだ動いていません");
+    }
+
+    static void setAutoState(Context c, String s) {
+        c.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit().putString(KEY_AUTO_STATE, s).apply();
+    }
+
+    /**
+     * 新しい版があれば、画面を出さずに落として入れる。**呼んだスレッドで最後まで動く**（通信するので裏のスレッドから呼ぶこと）。
+     * force=false のときは、前回の確認から6時間たっていなければ何もしない（定期ジョブ用）。
+     * 入れ終わるとアプリは一度止まり、UpdateReceiver が「更新しました」を知らせる。
+     */
+    public static void silentUpdate(Context context, boolean force) {
+        final Context c = context.getApplicationContext();
+        SharedPreferences p = c.getSharedPreferences(PREF, Context.MODE_PRIVATE);
+        long now = System.currentTimeMillis();
+        if (!force && now - p.getLong(KEY_AUTO_LAST, 0) < 6L * 60 * 60 * 1000) return;
+        if (autoRunning) return;
+        autoRunning = true;
+        p.edit().putLong(KEY_AUTO_LAST, now).apply();
+
+        HttpURLConnection conn = null;
+        PackageInstaller.Session session = null;
+        try {
+            conn = (HttpURLConnection) new URL(LATEST_URL + "?t=" + now).openConnection();
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(10000);
+            conn.setRequestProperty("Cache-Control", "no-cache");
+            if (conn.getResponseCode() != 200) throw new Exception("HTTP " + conn.getResponseCode());
+            StringBuilder sb = new StringBuilder();
+            BufferedReader r = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+            String line;
+            while ((line = r.readLine()) != null) sb.append(line);
+            r.close();
+            conn.disconnect();
+            conn = null;
+            JSONObject o = new JSONObject(sb.toString());
+            int code = o.optInt("versionCode", 0);
+            String name = o.optString("versionName", "?");
+            String url = o.optString("apkUrl", "");
+            if (code <= currentCode(c)) {
+                setAutoState(c, "最新です（v" + currentName(c) + "）");
+                return;
+            }
+            if (url.isEmpty()) throw new Exception("apkUrl なし");
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !c.getPackageManager().canRequestPackageInstalls()) {
+                setAutoState(c, "v" + name + " あり。「この提供元のアプリを許可」が必要（更新確認から）");
+                UpdateReceiver.askToUpdate(c, name);
+                return;
+            }
+
+            conn = (HttpURLConnection) new URL(url + "?t=" + now).openConnection();
+            conn.setConnectTimeout(15000);
+            conn.setReadTimeout(30000);
+            conn.setInstanceFollowRedirects(true);
+            if (conn.getResponseCode() != 200) throw new Exception("HTTP " + conn.getResponseCode());
+            int total = conn.getContentLength();
+
+            PackageInstaller pi = c.getPackageManager().getPackageInstaller();
+            PackageInstaller.SessionParams params = new PackageInstaller.SessionParams(
+                    PackageInstaller.SessionParams.MODE_FULL_INSTALL);
+            if (total > 0) params.setSize(total);
+            if (Build.VERSION.SDK_INT >= 31) {
+                params.setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED);
+            }
+            int sid = pi.createSession(params);
+            session = pi.openSession(sid);
+            InputStream in = conn.getInputStream();
+            OutputStream out = session.openWrite("apk", 0, total > 0 ? total : -1);
+            byte[] buf = new byte[16384];
+            int n;
+            while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+            session.fsync(out);
+            out.close();
+            in.close();
+
+            Intent i = new Intent(c, UpdateReceiver.class).setAction(UpdateReceiver.ACTION_RESULT);
+            i.putExtra("ver", name);
+            int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) flags |= PendingIntent.FLAG_MUTABLE;
+            PendingIntent pending = PendingIntent.getBroadcast(c, sid, i, flags);
+            setAutoState(c, "v" + name + " を入れています…");
+            session.commit(pending.getIntentSender());
+            session.close();
+            session = null;
+        } catch (Exception e) {
+            if (session != null) {
+                try {
+                    session.abandon();
+                } catch (Exception ignored) {
+                }
+            }
+            setAutoState(c, "失敗: " + e.getClass().getSimpleName() + " " + e.getMessage());
+        } finally {
+            if (conn != null) conn.disconnect();
+            autoRunning = false;
         }
     }
 
