@@ -2,5 +2,5 @@
   "versionCode": 17,
   "versionName": "3.0",
   "apkUrl": "https://raw.githubusercontent.com/koyomiyusei/claude-launcher/main/ClaudeLauncher.apk",
-  "notes": "通知の取りこぼし対策（合図に中身を載せて通信なしで即通知・目立つ通知に）。確認待ちはオレンジ。更新は通知をタップしたときだけ入る"
+  "notes": "文字の色を濃くはっきりさせた（機種によって薄い灰色になっていた）"
 }

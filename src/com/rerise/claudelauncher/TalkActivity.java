@@ -79,12 +79,14 @@ public class TalkActivity extends Activity {
         title.setText("トーク");
         title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22);
         title.setTypeface(Typeface.DEFAULT_BOLD);
+        title.setTextColor(Theme.text(this));
         header.addView(title, new LinearLayout.LayoutParams(0,
                 ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         final TextView more = new TextView(this);
         more.setText("メニュー ⋮");
         more.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
         more.setPadding(dp(14), dp(10), dp(14), dp(10));
+        more.setTextColor(Theme.text(this));
         more.setOnClickListener(v -> showMainMenu());
         header.addView(more);
         root.addView(header, new LinearLayout.LayoutParams(
@@ -122,7 +124,7 @@ public class TalkActivity extends Activity {
         empty.setText("このタブにはまだトークがありません\n右下の ＋ から追加できます");
         empty.setGravity(Gravity.CENTER);
         empty.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        empty.setAlpha(0.5f);
+        empty.setTextColor(Theme.muted(this));
         body.addView(empty, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         list.setEmptyView(empty);
@@ -398,6 +400,7 @@ public class TalkActivity extends Activity {
             t.setTypeface(Typeface.DEFAULT_BOLD);
         } else {
             bg.setColor(0x14808080);
+            t.setTextColor(Theme.text(this));
         }
         t.setBackground(bg);
         return t;
@@ -732,7 +735,7 @@ public class TalkActivity extends Activity {
         TextView t = new TextView(this);
         t.setText(text);
         t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        t.setAlpha(0.6f);
+        t.setTextColor(Theme.sub(this));
         t.setPadding(0, dp(14), 0, dp(2));
         return t;
     }
@@ -740,6 +743,7 @@ public class TalkActivity extends Activity {
     private TextView chooser(String text) {
         TextView t = new TextView(this);
         t.setText(text);
+        t.setTextColor(Theme.text(this));
         t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
         t.setPadding(dp(14), dp(10), dp(14), dp(10));
         GradientDrawable bg = new GradientDrawable();
@@ -813,6 +817,7 @@ public class TalkActivity extends Activity {
             name.setText(t.pinned ? "📌 " + t.name : t.name);
             name.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
             name.setTypeface(Typeface.DEFAULT_BOLD);
+            name.setTextColor(Theme.text(c));
             name.setSingleLine(true);
             name.setEllipsize(TextUtils.TruncateAt.END);
             col.addView(name);
@@ -820,7 +825,7 @@ public class TalkActivity extends Activity {
             TextView last = new TextView(c);
             last.setText(t.last == null || t.last.isEmpty() ? " " : t.last);
             last.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-            last.setAlpha(0.6f);
+            last.setTextColor(Theme.sub(c));
             last.setSingleLine(true);
             last.setEllipsize(TextUtils.TruncateAt.END);
             last.setPadding(0, dp(2), 0, 0);
@@ -837,7 +842,7 @@ public class TalkActivity extends Activity {
             TextView time = new TextView(c);
             time.setText(timeLabel(t.time));
             time.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
-            time.setAlpha(0.5f);
+            time.setTextColor(Theme.muted(c));
             time.setSingleLine(true);
             // 幅を「中身ぶん」と明示する。既定（親いっぱい）のままだと、右の列の幅が緑の丸の幅で決まってしまい、時刻が切れる
             right.addView(time, new LinearLayout.LayoutParams(
